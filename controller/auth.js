@@ -122,7 +122,7 @@ exports.signin = (req, res) => {
   User.findOne({ email }).exec((err, user) => {
     if (err || !user) {
       return res.status(400).json({
-        error: "User with that email does not exists",
+        error: "User with that email does not exists. Please Signup",
       });
     }
 
@@ -149,3 +149,22 @@ exports.requireSignin = expressJWT({
   secret: process.env.JWT_SECRET,
   algorithms: ["HS256"],
 });
+
+exports.adminMiddleware = (req, res, next) => {
+  User.findById({ _id: req.user._id }).exec((err, user) => {
+    if (err || !user) {
+      return res.status(400).json({
+        error: "User not found",
+      });
+    }
+
+    if (user.role !== "admin") {
+      return res.status(400).json({
+        error: "Admin Resource. Access Denied.",
+      });
+    }
+
+    req.profile = user;
+    next();
+  });
+};
